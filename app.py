@@ -1,35 +1,33 @@
 import pandas as pd
-import glob
 import dash
 from dash import html, dcc
 import plotly.express as px
 
-# Step 1: Load and combine CSVs
-files = glob.glob("data/daily_sales_data_*.csv")
-df = pd.concat([pd.read_csv(file) for file in files])
-
-# Step 2: Clean and process data
-df = df[df["product"] == "pink morsel"]  # Filter for pink morsel
-df["price"] = df["price"].str.replace("$", "", regex=False).astype(float)
-df["revenue"] = df["price"] * df["quantity"]
+# Load the cleaned sales data
+df = pd.read_csv("data/formatted_sales_data.csv")
 df["date"] = pd.to_datetime(df["date"])
 
-# Step 3: Group by date
-grouped = df.groupby("date")["revenue"].sum().reset_index()
+# Group sales by date
+daily_sales = df.groupby("date")["sales"].sum().reset_index()
 
-# Step 4: Create Dash app
+# Create figure
+fig = px.line(daily_sales, x="date", y="sales", title="Daily Sales of Pink Morsel")
+fig.update_layout(
+    xaxis_title="Date",
+    yaxis_title="Sales ($)",
+    title_x=0.5  # center the title
+)
+
+# Create the Dash app
 app = dash.Dash(__name__)
-app.title = "Quantium Dashboard"
+app.title = "Soul Foods Sales Dashboard"
 
-# Step 5: Create figure
-fig = px.line(grouped, x="date", y="revenue", title="Daily Revenue - Pink Morsel")
-
-# Step 6: Layout
+# Layout
 app.layout = html.Div([
-    html.H1("Quantium Sales Dashboard", style={"textAlign": "center"}),
+    html.H1("Pink Morsel Sales Visualizer", style={"textAlign": "center"}),
     dcc.Graph(figure=fig)
 ])
 
-# Step 7: Run
+# Run
 if __name__ == "__main__":
     app.run(debug=True)
